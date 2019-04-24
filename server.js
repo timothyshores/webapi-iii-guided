@@ -25,6 +25,14 @@ const restricted = (req, res, next) => {
     password === 'admin' ? next() : res.status(401).send('Incorrect password');
 }
 
+const only = user => {
+    return (req, res, next) => {
+        user !== req.headers.user
+            ? res.status(403).send('Incorrect username')
+            : next();
+    }
+}
+
 // Configure global middleware
 server.use(express.json());
 server.use(helmet());
@@ -33,7 +41,7 @@ server.use(greeter('Lambda School Web 18'));
 // server.use(seconds404); //disabled seconds404
 
 // Configure route handlers
-server.use('/api/hubs', restricted, hubsRouter);
+server.use('/api/hubs', restricted, only('admin'), hubsRouter);
 
 server.get('/', (req, res) => {
     res.send(`
