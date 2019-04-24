@@ -6,19 +6,31 @@ const hubsRouter = require('./hubs/hubs-router.js');
 
 const server = express();
 
+function greeter(teamName) {
+    return function (req, res, next) {
+        req.team = teamName;
+        next();
+    };
+}
+
+function seconds404(req, res, next) {
+    const seconds = new Date().getSeconds();
+    seconds % 3 === 0
+        ? res.status(404).send(`${seconds} is divisible by 3`)
+        : next()
+}
+
 // Configure global middleware
 server.use(express.json());
 server.use(helmet());
 server.use(morgan('dev'));
-server.use((req, res, next) => {
-    req.team = 'Web 18';
-    next();
-})
+server.use(greeter('Lambda School Web 18'));
+server.use(seconds404);
 
 // Configure route handlers
 server.use('/api/hubs', hubsRouter);
 
-server.get('/', (req, res, next) => {
+server.get('/', (req, res) => {
     res.send(`
     <h2>Lambda Hubs API</h2>
     <p>Welcome ${req.team}</p>
