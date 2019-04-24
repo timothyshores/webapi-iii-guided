@@ -6,18 +6,23 @@ const hubsRouter = require('./hubs/hubs-router.js');
 
 const server = express();
 
-function greeter(teamName) {
-    return function (req, res, next) {
+const greeter = teamName => {
+    return (req, res, next) => {
         req.team = teamName;
         next();
     };
 }
 
-function seconds404(req, res, next) {
+const seconds404 = (req, res, next) => {
     const seconds = new Date().getSeconds();
     seconds % 3 === 0
         ? res.status(404).send(`${seconds} is divisible by 3`)
         : next()
+}
+
+const restricted = (req, res, next) => {
+    const password = req.headers.password;
+    password === 'admin' ? next() : res.status(401).send('Incorrect password');
 }
 
 // Configure global middleware
@@ -25,10 +30,10 @@ server.use(express.json());
 server.use(helmet());
 server.use(morgan('dev'));
 server.use(greeter('Lambda School Web 18'));
-server.use(seconds404);
+// server.use(seconds404); //disabled seconds404
 
 // Configure route handlers
-server.use('/api/hubs', hubsRouter);
+server.use('/api/hubs', restricted, hubsRouter);
 
 server.get('/', (req, res) => {
     res.send(`
